@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Atualizar Foto Facial{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-edit"></i> Atualizar Foto para Reconhecimento Facial
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if not pode_usar_facial %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Acesso Negado:</strong> Você não tem permissão para usar reconhecimento facial.
+                        </div>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                        </a>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Foto Atual:</h5>
+                                {% if usuario.foto_perfil_facial %}
+                                    <div class="current-photo-container text-center mb-3">
+                                        <img src="{{ usuario.foto_perfil_facial.url }}" 
+                                             class="img-fluid rounded" 
+                                             style="max-width: 200px; max-height: 200px; object-fit: cover; border: 2px solid #ddd;">
+                                        <p class="small text-muted mt-2">
+                                            Cadastrada em: {{ usuario.data_cadastro_facial|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
+                                {% else %}
+                                    <div class="no-photo text-center mb-3 p-4" style="border: 2px dashed #ccc; border-radius: 8px;">
+                                        <i class="fas fa-user-slash fa-3x text-muted"></i>
+                                        <p class="text-muted mt-2">Nenhuma foto cadastrada</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <h6>Instruções:</h6>
+                                <ul class="small">
+                                    <li>Use uma foto clara e bem iluminada</li>
+                                    <li>Olhe diretamente para a câmera</li>
+                                    <li>Evite óculos escuros ou máscaras</li>
+                                    <li>Formato: JPG ou PNG (máx. 5MB)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5>Nova Foto:</h5>
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    
+                                    <div class="form-group">
+                                        <div class="upload-area text-center p-4" 
+                                             style="border: 2px dashed #ddd; border-radius: 8px; background: #f9f9f9;">
+                                            
+                                            <input type="file" 
+                                                   id="id_foto_perfil_facial" 
+                                                   name="foto_perfil_facial" 
+                                                   accept="image/jpeg,image/png" 
+                                                   class="form-control-file d-none">
+                                            
+                                            <div id="uploadPlaceholder">
+                                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted mb-2">Selecione uma nova foto</p>
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                        onclick="document.getElementById('id_foto_perfil_facial').click()">
+                                                    <i class="fas fa-folder-open"></i> Escolher Arquivo
+                                                </button>
+                                            </div>
+                                            
+                                            <div id="imagePreview" class="d-none">
+                                                <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                                                <p class="mt-2 mb-0">
+                                                    <small class="text-success">
+                                                        <i class="fas fa-check"></i> Foto selecionada
+                                                    </small>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-success btn-block" id="submitBtn" disabled>
+                                            <i class="fas fa-save"></i> Atualizar Foto Facial
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                            </a>
+                            
+                            {% if usuario.foto_perfil_facial %}
+                                <button class="btn btn-outline-danger float-right" data-toggle="modal" data-target="#removeModal">
+                                    <i class="fas fa-trash"></i> Remover Foto
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação para Remoção -->
+{% if usuario.foto_perfil_facial %}
+<div class="modal fade" id="removeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Remoção</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover sua foto de reconhecimento facial?</p>
+                <p class="text-muted small">Esta ação desativará o reconhecimento facial para sua conta.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'remover_foto_facial' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Sim, Remover</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('id_foto_perfil_facial');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Validações básicas
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione apenas arquivos de imagem.');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            alert('A imagem deve ter no máximo 5MB.');
+            return;
+        }
+        
+        // Mostra preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            uploadPlaceholder.classList.add('d-none');
+            imagePreview.classList.remove('d-none');
+            submitBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Permite clicar na área toda para selecionar arquivo
+    document.querySelector('.upload-area').addEventListener('click', function() {
+        if (!imagePreview.classList.contains('d-none')) return; // Não clica se já tem preview
+        fileInput.click();
+    });
+});
+</script>
+{% endblock %}

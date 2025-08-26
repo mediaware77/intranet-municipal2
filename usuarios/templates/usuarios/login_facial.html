@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login Facial{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-check"></i> Login por Reconhecimento Facial
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <p class="text-muted">Posicione-se em frente à câmera para autenticação</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <!-- Opção de username específico -->
+                            <div class="form-group">
+                                <label for="usernameField">Usuário (opcional):</label>
+                                <input type="text" class="form-control" id="usernameField" 
+                                       placeholder="Digite seu username para busca direcionada"
+                                       value="{{ username }}">
+                                <small class="form-text text-muted">
+                                    Deixe em branco para identificação automática
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="camera-container text-center">
+                        <div id="cameraStatus" class="mb-3">
+                            <button id="startCamera" class="btn btn-primary btn-lg">
+                                <i class="fas fa-camera"></i> Iniciar Reconhecimento
+                            </button>
+                        </div>
+                        
+                        <div id="cameraWrapper" class="d-none">
+                            <div class="position-relative">
+                                <video id="video" width="400" height="300" autoplay muted class="border rounded"></video>
+                                <div class="face-detection-overlay"></div>
+                            </div>
+                            <canvas id="canvas" width="400" height="300" class="d-none"></canvas>
+                            
+                            <div class="mt-3">
+                                <button id="loginBtn" class="btn btn-success btn-lg">
+                                    <i class="fas fa-sign-in-alt"></i> Fazer Login
+                                </button>
+                                <button id="stopCamera" class="btn btn-danger ml-2">
+                                    <i class="fas fa-stop"></i> Parar
+                                </button>
+                            </div>
+
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    Mantenha o rosto bem posicionado na tela
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div id="loadingIndicator" class="d-none">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="sr-only">Processando...</span>
+                            </div>
+                            <p>Processando reconhecimento facial...</p>
+                        </div>
+                    </div>
+
+                    <div id="messageArea" class="mt-3"></div>
+
+                    <div class="mt-4 text-center">
+                        <hr>
+                        <p class="text-muted">Outras opções:</p>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key"></i> Login com Senha
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt"></i>
+                    Seus dados biométricos são criptografados e protegidos
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.face-detection-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 250px;
+    border: 2px dashed #007bff;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.camera-container video {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .face-detection-overlay {
+        width: 150px;
+        height: 200px;
+    }
+}
+</style>
+
+<script>
+let video;
+let canvas;
+let context;
+let stream;
+let isProcessing = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    context = canvas.getContext('2d');
+    
+    // Event listeners
+    document.getElementById('startCamera').addEventListener('click', startCamera);
+    document.getElementById('stopCamera').addEventListener('click', stopCamera);
+    document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+});
+
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: 400, 
+                height: 300,
+                facingMode: 'user'
+            } 
+        });
+        
+        video.srcObject = stream;
+        document.getElementById('cameraStatus').classList.add('d-none');
+        document.getElementById('cameraWrapper').classList.remove('d-none');
+        
+        showMessage('Câmera iniciada. Posicione seu rosto no círculo.', 'info');
+        
+    } catch (error) {
+        console.error('Erro ao acessar câmera:', error);
+        showMessage('Erro ao acessar a câmera. Verifique as permissões e tente novamente.', 'danger');
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById('cameraStatus').classList.remove('d-none');
+    document.getElementById('cameraWrapper').classList.add('d-none');
+    clearMessage();
+}
+
+async function attemptLogin() {
+    if (isProcessing) return;
+    
+    if (!video.videoWidth || !video.videoHeight) {
+        showMessage('Câmera não está pronta. Aguarde um momento.', 'warning');
+        return;
+    }
+    
+    isProcessing = true;
+    
+    // Desenha o frame atual no canvas
+    context.drawImage(video, 0, 0, 400, 300);
+    
+    // Converte para base64
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Mostra indicador de carregamento
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('loginBtn').disabled = true;
+    
+    try {
+        const username = document.getElementById('usernameField').value.trim();
+        
+        const response = await fetch('{% url "login_facial" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                image: imageData,
+                username: username
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(`${result.message}`, 'success');
+            
+            // Redireciona após login bem-sucedido
+            setTimeout(() => {
+                window.location.href = result.redirect_url || '{% url "dashboard" %}';
+            }, 1500);
+            
+        } else {
+            showMessage(result.message, 'danger');
+            
+            // Se falhou, permite nova tentativa após um tempo
+            setTimeout(() => {
+                isProcessing = false;
+                document.getElementById('loginBtn').disabled = false;
+            }, 3000);
+        }
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showMessage('Erro de conexão. Verifique sua internet e tente novamente.', 'danger');
+        isProcessing = false;
+        document.getElementById('loginBtn').disabled = false;
+    } finally {
+        document.getElementById('loadingIndicator').classList.add('d-none');
+    }
+}
+
+function showMessage(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    const alertClass = type === 'danger' ? 'alert-danger' : 
+                      type === 'success' ? 'alert-success' :
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    messageArea.innerHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 
+                               type === 'success' ? 'check-circle' :
+                               type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+}
+
+function clearMessage() {
+    document.getElementById('messageArea').innerHTML = '';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-stop camera after 5 minutes for security
+setTimeout(() => {
+    if (stream) {
+        stopCamera();
+        showMessage('Sessão expirada por segurança. Inicie novamente se necessário.', 'warning');
+    }
+}, 300000);
+</script>
+{% endblock %}

@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cadastro Facial{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-shield"></i> Cadastro de Reconhecimento Facial
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if not pode_usar_facial %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Acesso Negado:</strong> Você não tem permissão para usar reconhecimento facial. Entre em contato com o administrador.
+                        </div>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                        </a>
+                    {% else %}
+                        {% if tem_face_cadastrada %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Face já cadastrada:</strong> Você já possui reconhecimento facial configurado. 
+                                Cadastrar novamente substituirá o cadastro anterior.
+                                <small class="d-block mt-2">
+                                    Cadastrado em: {{ usuario.data_cadastro_facial|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Instruções:</h5>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success"></i> Posicione-se em frente à câmera</li>
+                                    <li><i class="fas fa-check text-success"></i> Certifique-se que há boa iluminação</li>
+                                    <li><i class="fas fa-check text-success"></i> Olhe diretamente para a câmera</li>
+                                    <li><i class="fas fa-check text-success"></i> Mantenha expressão neutra</li>
+                                    <li><i class="fas fa-times text-danger"></i> Evite usar óculos escuros</li>
+                                    <li><i class="fas fa-times text-danger"></i> Não use máscaras ou coberturas</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="foto-container">
+                                    <!-- Abas para escolher método -->
+                                    <ul class="nav nav-tabs" id="photoTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link active" id="camera-tab" data-toggle="tab" href="#camera-panel" role="tab">
+                                                <i class="fas fa-camera"></i> Câmera
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link" id="upload-tab" data-toggle="tab" href="#upload-panel" role="tab">
+                                                <i class="fas fa-upload"></i> Upload
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    
+                                    <div class="tab-content mt-3" id="photoTabsContent">
+                                        <!-- Aba da Câmera -->
+                                        <div class="tab-pane fade show active" id="camera-panel" role="tabpanel">
+                                            <div class="text-center">
+                                                <div id="cameraStatus" class="mb-3">
+                                                    <button id="startCamera" class="btn btn-primary">
+                                                        <i class="fas fa-camera"></i> Iniciar Câmera
+                                                    </button>
+                                                </div>
+                                                
+                                                <div id="cameraWrapper" class="d-none">
+                                                    <div class="video-preview-container mb-3">
+                                                        <video id="video" width="320" height="240" autoplay muted 
+                                                               style="border: 2px solid #ddd; border-radius: 8px;"></video>
+                                                    </div>
+                                                    <canvas id="canvas" width="320" height="240" class="d-none"></canvas>
+                                                    
+                                                    <div class="mt-3">
+                                                        <button id="captureBtn" class="btn btn-success">
+                                                            <i class="fas fa-camera-retro"></i> Capturar Face
+                                                        </button>
+                                                        <button id="stopCamera" class="btn btn-danger ml-2">
+                                                            <i class="fas fa-stop"></i> Parar Câmera
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Aba de Upload -->
+                                        <div class="tab-pane fade" id="upload-panel" role="tabpanel">
+                                            <div class="text-center">
+                                                <div class="upload-area mb-3" 
+                                                     style="border: 2px dashed #ccc; padding: 40px; border-radius: 8px; background: #f9f9f9;">
+                                                    <input type="file" id="photoUpload" accept="image/*" class="d-none">
+                                                    <div id="uploadPlaceholder">
+                                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                                        <p class="text-muted">Clique para selecionar uma foto<br>
+                                                        <small>Formatos: JPG, PNG (máx. 5MB)</small></p>
+                                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('photoUpload').click()">
+                                                            <i class="fas fa-folder-open"></i> Escolher Arquivo
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <div id="imagePreview" class="d-none">
+                                                        <img id="previewImg" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid #ddd;">
+                                                        <div class="mt-3">
+                                                            <button id="uploadBtn" class="btn btn-success">
+                                                                <i class="fas fa-check"></i> Processar Foto
+                                                            </button>
+                                                            <button id="changePhoto" class="btn btn-outline-secondary ml-2">
+                                                                <i class="fas fa-exchange-alt"></i> Trocar Foto
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="loadingIndicator" class="d-none text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Processando...</span>
+                                        </div>
+                                        <p class="mt-2">Processando face...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="messageArea" class="mt-3"></div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                            </a>
+                            {% if tem_face_cadastrada %}
+                                <button id="removeBtn" class="btn btn-outline-danger float-right">
+                                    <i class="fas fa-trash"></i> Remover Cadastro Facial
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação para Remoção -->
+<div class="modal fade" id="removeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Remoção</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover seu cadastro de reconhecimento facial?</p>
+                <p class="text-muted small">Esta ação não pode ser desfeita. Você precisará recadastrar sua face para usar o reconhecimento novamente.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmRemove">Sim, Remover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let video;
+let canvas;
+let context;
+let stream;
+
+document.addEventListener('DOMContentLoaded', function() {
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    context = canvas.getContext('2d');
+    
+    // Event listeners
+    document.getElementById('startCamera').addEventListener('click', startCamera);
+    document.getElementById('stopCamera').addEventListener('click', stopCamera);
+    document.getElementById('captureBtn').addEventListener('click', captureImage);
+    
+    // Upload de arquivo
+    document.getElementById('photoUpload').addEventListener('change', handleFileSelect);
+    document.getElementById('uploadBtn').addEventListener('click', processUploadedImage);
+    document.getElementById('changePhoto').addEventListener('click', function() {
+        document.getElementById('imagePreview').classList.add('d-none');
+        document.getElementById('uploadPlaceholder').classList.remove('d-none');
+        document.getElementById('photoUpload').value = '';
+    });
+    
+    {% if tem_face_cadastrada %}
+    document.getElementById('removeBtn').addEventListener('click', function() {
+        $('#removeModal').modal('show');
+    });
+    
+    document.getElementById('confirmRemove').addEventListener('click', removeFacialData);
+    {% endif %}
+});
+
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: 320, 
+                height: 240,
+                facingMode: 'user'
+            } 
+        });
+        
+        video.srcObject = stream;
+        document.getElementById('cameraStatus').classList.add('d-none');
+        document.getElementById('cameraWrapper').classList.remove('d-none');
+        
+    } catch (error) {
+        console.error('Erro ao acessar câmera:', error);
+        showMessage('Erro ao acessar a câmera. Verifique as permissões.', 'danger');
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById('cameraStatus').classList.remove('d-none');
+    document.getElementById('cameraWrapper').classList.add('d-none');
+}
+
+async function captureImage() {
+    if (!video.videoWidth || !video.videoHeight) {
+        showMessage('Câmera não está pronta. Aguarde um momento.', 'warning');
+        return;
+    }
+    
+    // Desenha o frame atual no canvas
+    context.drawImage(video, 0, 0, 320, 240);
+    
+    // Converte para base64
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Mostra indicador de carregamento
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('captureBtn').disabled = true;
+    
+    try {
+        const response = await fetch('', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                image: imageData
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(result.message, 'success');
+            setTimeout(() => {
+                window.location.href = '{% url "dashboard" %}';
+            }, 2000);
+        } else {
+            showMessage(result.message, 'danger');
+        }
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showMessage('Erro ao processar imagem. Tente novamente.', 'danger');
+    } finally {
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        document.getElementById('captureBtn').disabled = false;
+    }
+}
+
+async function removeFacialData() {
+    try {
+        const response = await fetch('{% url "remover_facial" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            $('#removeModal').modal('hide');
+            showMessage(result.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showMessage(result.message, 'danger');
+        }
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showMessage('Erro ao remover cadastro. Tente novamente.', 'danger');
+    }
+}
+
+function showMessage(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    messageArea.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validações básicas
+    if (!file.type.startsWith('image/')) {
+        showMessage('Por favor, selecione apenas arquivos de imagem.', 'danger');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+        showMessage('A imagem deve ter no máximo 5MB.', 'danger');
+        return;
+    }
+    
+    // Mostra preview da imagem
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewImg = document.getElementById('previewImg');
+        previewImg.src = e.target.result;
+        
+        document.getElementById('uploadPlaceholder').classList.add('d-none');
+        document.getElementById('imagePreview').classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+}
+
+async function processUploadedImage() {
+    const previewImg = document.getElementById('previewImg');
+    const imageData = previewImg.src;
+    
+    if (!imageData || imageData === '') {
+        showMessage('Nenhuma imagem selecionada.', 'danger');
+        return;
+    }
+    
+    // Mostra indicador de carregamento
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('uploadBtn').disabled = true;
+    
+    try {
+        const response = await fetch('', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                image: imageData
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(result.message, 'success');
+            setTimeout(() => {
+                window.location.href = '{% url "dashboard" %}';
+            }, 2000);
+        } else {
+            showMessage(result.message, 'danger');
+        }
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showMessage('Erro ao processar imagem. Tente novamente.', 'danger');
+    } finally {
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        document.getElementById('uploadBtn').disabled = false;
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

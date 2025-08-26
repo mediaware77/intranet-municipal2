@@ -42,6 +42,40 @@
         </div>
     </div>
     
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-person-badge display-4 text-info mb-3"></i>
+                <h5 class="card-title">Reconhecimento Facial</h5>
+                <p class="card-text">
+                    {% if user.pode_usar_reconhecimento_facial %}
+                        Gerencie sua autenticação biométrica
+                    {% else %}
+                        Funcionalidade não disponível
+                    {% endif %}
+                </p>
+                {% if user.pode_usar_reconhecimento_facial %}
+                    <div class="btn-group-vertical" role="group">
+                        <a href="{% url 'cadastrar_face' %}" class="btn btn-info btn-sm">
+                            <i class="bi bi-camera me-1"></i>
+                            {% if user.reconhecimento_facial_ativo %}Capturar Face{% else %}Cadastrar Face{% endif %}
+                        </a>
+                        <a href="{% url 'atualizar_foto_facial' %}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-upload me-1"></i>Upload de Foto
+                        </a>
+                        {% if user.reconhecimento_facial_ativo %}
+                            <a href="{% url 'historico_facial' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-clock-history me-1"></i>Histórico
+                            </a>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <span class="btn btn-secondary disabled">Sem Permissão</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
     {% if user.is_staff %}
     <div class="col-md-4">
         <div class="card">
@@ -114,6 +148,38 @@
                                     {% empty %}
                                         <small class="text-muted">Nenhum</small>
                                     {% endfor %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Reconhecimento Facial:</th>
+                                <td>
+                                    {% if user.reconhecimento_facial_ativo %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Ativo
+                                        </span>
+                                        <small class="text-muted d-block">
+                                            Cadastrado em: {{ user.data_cadastro_facial|date:"d/m/Y H:i" }}
+                                        </small>
+                                        {% if user.ultimo_acesso_facial %}
+                                            <small class="text-muted d-block">
+                                                Último uso: {{ user.ultimo_acesso_facial|date:"d/m/Y H:i" }}
+                                            </small>
+                                        {% endif %}
+                                    {% elif user.pode_usar_reconhecimento_facial %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> Não Cadastrado
+                                        </span>
+                                        <small class="text-muted d-block">
+                                            <a href="{% url 'cadastrar_face' %}">Clique aqui para cadastrar</a>
+                                        </small>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle"></i> Sem Permissão
+                                        </span>
+                                        <small class="text-muted d-block">
+                                            Contate o administrador para ativar
+                                        </small>
+                                    {% endif %}
                                 </td>
                             </tr>
                         </table>
