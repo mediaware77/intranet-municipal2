@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Intranet Municipal{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Bem-vindo(a), {{ user.get_full_name|default:user.username }}!</h2>
+                <p class="lead">Este é o seu painel de controle da Intranet Municipal.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-person-circle display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Meu Perfil</h5>
+                <p class="card-text">Visualize e edite suas informações pessoais</p>
+                <a href="{% url 'perfil' %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right me-1"></i>Acessar
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-key display-4 text-warning mb-3"></i>
+                <h5 class="card-title">Segurança</h5>
+                <p class="card-text">Altere sua senha de acesso ao sistema</p>
+                <a href="{% url 'alterar_senha' %}" class="btn btn-warning text-white">
+                    <i class="bi bi-arrow-right me-1"></i>Alterar Senha
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.is_staff %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-gear-fill display-4 text-danger mb-3"></i>
+                <h5 class="card-title">Administração</h5>
+                <p class="card-text">Acesse o painel administrativo do sistema</p>
+                <a href="{% url 'admin:index' %}" class="btn btn-danger">
+                    <i class="bi bi-arrow-right me-1"></i>Admin
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Informações do Usuário
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Nome de Usuário:</th>
+                                <td>{{ user.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Nome Completo:</th>
+                                <td>{{ user.get_full_name|default:"Não informado" }}</td>
+                            </tr>
+                            <tr>
+                                <th>E-mail:</th>
+                                <td>{{ user.email|default:"Não informado" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Setor Principal:</th>
+                                <td>
+                                    {% if user.grupo_primario %}
+                                        <span class="badge bg-primary">{{ user.grupo_primario.get_hierarquia_completa }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Não definido</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Telefone:</th>
+                                <td>{{ user.telefone|default:"Não informado" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Último Acesso:</th>
+                                <td>{{ user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Membro Desde:</th>
+                                <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Setores Secundários:</th>
+                                <td>
+                                    {% for grupo in user.grupos_secundarios.all %}
+                                        <span class="badge bg-info me-1">{{ grupo.get_hierarquia_completa }}</span>
+                                    {% empty %}
+                                        <small class="text-muted">Nenhum</small>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

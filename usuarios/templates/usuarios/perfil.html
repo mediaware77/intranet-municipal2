@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil - Intranet Municipal{% endblock %}
+{% block page_title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person-lines-fill me-2"></i>Informações Pessoais
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">
+                                {{ form.username.label }}
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.help_text %}
+                                <small class="form-text text-muted">{{ form.username.help_text }}</small>
+                            {% endif %}
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                {{ form.first_name.label }}
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                {{ form.last_name.label }}
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                {{ form.email.label }}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefone.id_for_label }}" class="form-label">
+                                {{ form.telefone.label }}
+                            </label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}
+                                <div class="text-danger small mt-1">{{ form.telefone.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h6 class="text-muted mb-3"><i class="bi bi-people me-2"></i>Grupos de Usuário</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.grupo_primario_display.id_for_label }}" class="form-label">
+                                {{ form.grupo_primario_display.label }}
+                            </label>
+                            {{ form.grupo_primario_display }}
+                            <small class="form-text text-muted">Grupo principal de permissões</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.grupos_secundarios_display.id_for_label }}" class="form-label">
+                                {{ form.grupos_secundarios_display.label }}
+                            </label>
+                            {{ form.grupos_secundarios_display }}
+                            <small class="form-text text-muted">Grupos adicionais</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Informações da Conta
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Status da Conta</small>
+                    <div>
+                        {% if user.ativo %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Ativa</span>
+                        {% else %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Inativa</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Tipo de Conta</small>
+                    <div>
+                        {% if user.is_staff %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-star me-1"></i>Administrador</span>
+                        {% else %}
+                            <span class="badge bg-info"><i class="bi bi-person me-1"></i>Usuário</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Membro Desde</small>
+                    <div><strong>{{ user.date_joined|date:"d/m/Y" }}</strong></div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Último Acesso</small>
+                    <div><strong>{{ user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso" }}</strong></div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <small class="text-muted">Grupos do Usuário</small>
+                    <div class="mt-2">
+                        {% if user.grupo_primario %}
+                            <span class="badge bg-primary me-1 mb-1">
+                                <i class="bi bi-star-fill me-1"></i>{{ user.grupo_primario.get_hierarquia_completa }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary me-1 mb-1">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Nenhum grupo primário
+                            </span>
+                        {% endif %}
+                        <br>
+                        {% for grupo in user.grupos_secundarios.all %}
+                            <span class="badge bg-info me-1 mb-1">
+                                <i class="bi bi-people me-1"></i>{{ grupo.get_hierarquia_completa }}
+                            </span>
+                        {% empty %}
+                            <small class="text-muted">Nenhum grupo secundário</small>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid">
+                    <a href="{% url 'alterar_senha' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-key me-2"></i>Alterar Senha
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

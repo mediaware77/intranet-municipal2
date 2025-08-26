@@ -1,0 +1,122 @@
+[
+    {
+        "model": "usuarios.grupo",
+        "pk": 1,
+        "fields": {
+            "nome": "Administração",
+            "descricao": "Grupo para usuários da administração geral",
+            "grupo_pai": null,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 2,
+        "fields": {
+            "nome": "Recursos Humanos",
+            "descricao": "Departamento de Recursos Humanos",
+            "grupo_pai": 1,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 3,
+        "fields": {
+            "nome": "Tecnologia da Informação",
+            "descricao": "Departamento de TI",
+            "grupo_pai": 1,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 4,
+        "fields": {
+            "nome": "Financeiro",
+            "descricao": "Departamento Financeiro",
+            "grupo_pai": 1,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 5,
+        "fields": {
+            "nome": "Operações",
+            "descricao": "Grupo para usuários operacionais",
+            "grupo_pai": null,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 6,
+        "fields": {
+            "nome": "Atendimento ao Público",
+            "descricao": "Atendimento e relacionamento com o público",
+            "grupo_pai": 5,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 7,
+        "fields": {
+            "nome": "Manutenção",
+            "descricao": "Equipe de manutenção predial e equipamentos",
+            "grupo_pai": 5,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 8,
+        "fields": {
+            "nome": "Segurança",
+            "descricao": "Equipe de segurança e vigilância",
+            "grupo_pai": 5,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 9,
+        "fields": {
+            "nome": "Usuários Gerais",
+            "descricao": "Grupo padrão para usuários sem departamento específico",
+            "grupo_pai": null,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "usuarios.grupo",
+        "pk": 10,
+        "fields": {
+            "nome": "Suporte",
+            "descricao": "Grupo para equipe de suporte técnico",
+            "grupo_pai": 3,
+            "ativo": true,
+            "data_criacao": "2024-01-01T10:00:00Z",
+            "data_atualizacao": "2024-01-01T10:00:00Z"
+        }
+    }
+]
